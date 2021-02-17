@@ -8,6 +8,7 @@ import com.resimulators.simukraft.common.jobs.core.IJob;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
 
@@ -18,6 +19,8 @@ public class JobBuilder implements IJob {
     private int periodsworked = 0;
     private BlockPos workSpace;
     private Activity state = Activity.NOT_WORKING;
+    private Direction direction;
+    private boolean finished;
 
     public JobBuilder(SimEntity sim) {
         this.sim = sim;
@@ -33,6 +36,13 @@ public class JobBuilder implements IJob {
         return template;
     }
 
+    public void setDirection(Direction dir){
+        this.direction = dir;
+    }
+
+    public Direction getDirection(){
+        return direction;
+    }
     @Override
     public Profession jobType() {
         return Profession.BUILDER;
@@ -50,7 +60,7 @@ public class JobBuilder implements IJob {
 
     @Override
     public int intervalTime() {
-        return 1000;
+        return 200;
     }
 
     @Override
@@ -98,6 +108,7 @@ public class JobBuilder implements IJob {
         if (workSpace != null) {
             other.putLong("jobpos", workSpace.toLong());
         }
+        other.putBoolean("finished",finished);
         nbt.add(other);
 
         return nbt;
@@ -112,6 +123,9 @@ public class JobBuilder implements IJob {
             }
             if (list.contains("jobpos")) {
                 setWorkSpace(BlockPos.fromLong(list.getLong("jobpos")));
+            }
+            if (list.contains("finished")){
+                finished = list.getBoolean("finished");
             }
         }
     }
@@ -142,13 +156,23 @@ public class JobBuilder implements IJob {
     }
 
     @Override
-    public boolean hasAi() {
+    public boolean hasAiRunning()  {
         return sim.goalSelector.getRunningGoals().anyMatch((goal) -> goal.getGoal() == goal1);
     }
 
     @Override
     public double getWage() {
         return 0;
+    }
+
+    @Override
+    public boolean isFinished() {
+        return finished;
+    }
+
+    @Override
+    public void setFinished(boolean finished) {
+        this.finished = finished;
     }
 
 

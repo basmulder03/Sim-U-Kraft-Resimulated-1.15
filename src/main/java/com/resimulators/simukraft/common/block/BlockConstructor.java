@@ -40,12 +40,17 @@ public class BlockConstructor extends BlockBase {
             Faction faction = SavedWorldData.get(world).getFactionWithPlayer(player.getUniqueID());
             ArrayList<Integer> simids = faction.getSimIds((ServerWorld) world);
             System.out.println(world.getTileEntity(pos));
+
             if (((ITile)world.getTileEntity(pos)).getHired()){
                 int hiredId = ((ServerWorld) world).getEntityByUuid(((ITile)world.getTileEntity(pos)).getSimId()).getEntityId();
                 SimUKraftPacketHandler.INSTANCE.sendTo(new OpenJobGuiPacket(simids,pos,hiredId, GuiHandler.BUILDER, "Constructor"),((ServerPlayerEntity) player).connection.netManager, NetworkDirection.PLAY_TO_CLIENT);// used when there is a sim hired
             } else {
                 SimUKraftPacketHandler.INSTANCE.sendTo(new OpenJobGuiPacket(simids,pos,GuiHandler.BUILDER, "Constructor"),((ServerPlayerEntity) player).connection.netManager, NetworkDirection.PLAY_TO_CLIENT);//used when there is no sim employed at this block
             }
+            if (world.getTileEntity(pos) instanceof TileConstructor){
+                ((TileConstructor)world.getTileEntity(pos)).FindAndLoadBuilding(player);
+        }
+
         }
         return ActionResultType.SUCCESS;
     }
@@ -66,15 +71,7 @@ public class BlockConstructor extends BlockBase {
             SimEntity sim = (SimEntity) ((ServerWorld)worldIn).getEntityByUuid(tile.getSimId());
             if (sim != null){
                 int id = SavedWorldData.get(worldIn).getFactionWithPlayer(player.getUniqueID()).getId();
-                SavedWorldData.get(worldIn).fireSim(id,sim);
-                SavedWorldData.get(worldIn).getFaction(id).sendPacketToFaction(new SimFirePacket(id,sim.getEntityId(),pos));
-                if (sim.getJob().hasAi()){
-                    sim.getJob().removeJobAi();
-                }
-                sim.setJob(null);
-                sim.setProfession(0);
-                tile.setHired(false);
-                tile.setSimId(null);
+                sim.fireSim(sim,id,false);
 
             }
         }

@@ -4,6 +4,8 @@ import com.resimulators.simukraft.init.ModTileEntities;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;
 
+import javax.annotation.Nonnull;
+
 public enum BuildingType {
 
     CUSTOM_DATA("custom Data", ModTileEntities.CUSTOM_DATA,Category.SPECIAL,1),
@@ -13,7 +15,7 @@ public enum BuildingType {
     PIG_FARMER("pig farmer", ModTileEntities.PIG_FARMER, Category.INDUSTRIAL, 5),
     CHICKEN_FARMER("chicken farmer", ModTileEntities.CHICKEN_FARMER, Category.INDUSTRIAL, 6),
     BUTCHER("butchery", ModTileEntities.GLASS_FACTORY, Category.COMMERCIAL,7),
-    BAKER("bakery", ModTileEntities.GLASS_FACTORY, Category.COMMERCIAL, 8),
+    BAKER("bakery", ModTileEntities.BAKER, Category.COMMERCIAL, 8),
     GROCER("grocery", ModTileEntities.GLASS_FACTORY, Category.COMMERCIAL, 9),
     RESIDENTIAL("residential", ModTileEntities.GLASS_FACTORY, Category.RESIDENTIAL,10),
     SPECIAL("special", ModTileEntities.GLASS_FACTORY,Category.SPECIAL,11);

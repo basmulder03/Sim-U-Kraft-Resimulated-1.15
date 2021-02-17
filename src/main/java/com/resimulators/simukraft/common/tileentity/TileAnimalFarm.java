@@ -2,6 +2,7 @@ package com.resimulators.simukraft.common.tileentity;
 
 import com.resimulators.simukraft.client.gui.GuiHandler;
 import com.resimulators.simukraft.common.enums.Animal;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -105,5 +106,27 @@ public class TileAnimalFarm extends TileEntity implements IControlBlock{
     @Override
     public CompoundNBT getUpdateTag() {
         return write(new CompoundNBT());
+    }
+
+
+    @Override
+    public CompoundNBT write(CompoundNBT nbt) {
+        super.write(nbt);
+        nbt.putBoolean("hired", this.hired);
+        if (simId != null) {
+            nbt.putUniqueId("simid", simId);
+        }
+        return nbt;
+    }
+
+
+
+    @Override
+    public void read(BlockState state, CompoundNBT nbt) {
+        super.read(state,nbt);
+        hired = nbt.getBoolean("hired");
+        if (nbt.contains("simid")) {
+            simId = nbt.getUniqueId("simid");
+        }
     }
 }
