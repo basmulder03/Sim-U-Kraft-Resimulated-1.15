@@ -6,6 +6,7 @@ import com.resimulators.simukraft.Reference;
 import com.resimulators.simukraft.SimuKraft;
 import com.resimulators.simukraft.common.enums.BuildingType;
 import com.resimulators.simukraft.common.enums.Category;
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTUtil;
@@ -18,11 +19,13 @@ import net.minecraft.util.datafix.DefaultTypeReferences;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 import net.minecraft.world.storage.FolderName;
 import net.minecraft.world.storage.SaveFormat;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -37,13 +40,20 @@ public class CustomTemplateManager extends TemplateManager {
     private final DataFixer fixer;
     private IResourceManager field_237130_d_;
     private final Path pathGenerated;
+    private Category category;
 
 
     public CustomTemplateManager(IResourceManager p_i232119_1_, SaveFormat.LevelSave p_i232119_2_, DataFixer p_i232119_3_) {
         super(p_i232119_1_, p_i232119_2_, p_i232119_3_);
         this.field_237130_d_ = p_i232119_1_;
         this.fixer = p_i232119_3_;
-        this.pathGenerated = p_i232119_2_.resolveFilePath(FolderName.GENERATED).normalize();
+        //this.pathGenerated = p_i232119_2_.resolveFilePath(FolderName.GENERATED).normalize();
+        this.pathGenerated = new File(ServerLifecycleHooks.getCurrentServer().getDataDirectory(),"resources").toPath().normalize();
+        try {
+            Files.createDirectories(Files.exists(pathGenerated) ? this.pathGenerated.toRealPath() : this.pathGenerated);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public BuildingTemplate getTemplateDefaulted(ResourceLocation p_200220_1_) {
@@ -121,18 +131,20 @@ public class CustomTemplateManager extends TemplateManager {
         if (template == null) {
             return false;
         } else {
-            Category category;
+
             BuildingType type = BuildingType.getById(template.getTypeID());
             if (type != null){
             category = type.category; // can't figure out how to add this so it puts it into a folder for each type of building
             }else {
                 category = Category.SPECIAL;
             }
+
             Path path = this.resolvePath(templateName, ".nbt");
             Path path1 = path.getParent();
             if (path1 == null) {
                 return false;
             } else {
+
                 try {
                     Files.createDirectories(Files.exists(path1) ? path1.toRealPath() : path1);
                 } catch (IOException ioexception) {
@@ -155,6 +167,8 @@ public class CustomTemplateManager extends TemplateManager {
         try {
             Path path = this.pathGenerated.resolve(locationIn.getNamespace());
             Path path1 = path.resolve("structures");
+            if (category != null){
+            path1 = path1.resolve(category.category);}
             return FileUtil.resolveResourcePath(path1, locationIn.getPath(), extIn);
         } catch (InvalidPathException invalidpathexception) {
             throw new ResourceLocationException("Invalid resource path: " + locationIn, invalidpathexception);
@@ -180,7 +194,20 @@ public class CustomTemplateManager extends TemplateManager {
 
     public List<ResourceLocation> getAllTemplates(){
             Path path = pathGenerated.resolve(Reference.MODID + "/structures");
+            ArrayList<File> folders = Arrays.stream(Objects.requireNonNull(path.toFile().listFiles()))
+                    .filter(File::isDirectory)
+                    .collect(Collectors.toCollection(ArrayList::new));
 
-            return Arrays.stream(Objects.requireNonNull(path.toFile().list())).map(e -> new ResourceLocation(Reference.MODID, e)).collect(Collectors.toList());
+            ArrayList<ResourceLocation> structures;
+            structures = Arrays.stream(Objects.requireNonNull(path.toFile().listFiles()))
+                    .filter(file -> !file.isDirectory())
+                    .map(e -> new ResourceLocation(Reference.MODID, e.getName()))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            folders.forEach(folder -> structures.addAll(Arrays.stream(Objects.requireNonNull(folder.listFiles()))
+                    .filter(file -> !file.isDirectory())
+                    .map(e -> new ResourceLocation(Reference.MODID, e.getName()))
+                    .collect(Collectors.toList())));
+
+            return structures;
     }
 }
